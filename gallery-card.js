@@ -4,7 +4,8 @@ import {
   css
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
-class GalleryCard extends LitElement {
+
+class UnifiProtectGalleryCard extends LitElement {
   static get properties() {
     return {
       _hass: {},
@@ -27,20 +28,13 @@ class GalleryCard extends LitElement {
             html`` : html`<ha-progress-button class="btn-reload" @click="${ev => this._loadResources(this._hass)}">Reload</ha-progress-button>` }
           <div class="resource-viewer" @touchstart="${ev => this._handleTouchStart(ev)}" @touchmove="${ev => this._handleTouchMove(ev)}" @keydown="${ev => this._keyNavigation(ev)}">
             <figure style="margin:5px;">
-              ${
-                this._currentResource().isHass ?
-                html`<hui-image @click="${ev => this._popupCamera(ev)}"
-                    .hass=${this._hass}
-                    .cameraImage=${this._currentResource().name}
-                    .cameraView=${"live"}
-                  ></hui-image>` :
-                this._isImageExtension(this._currentResource().extension) ?
-                html`<img @click="${ev => this._popupImage(ev)}" src="${this._currentResource().url}"/>` :
-                html`<video controls src="${this._currentResource().url}#t=0.1" @loadedmetadata="${ev => this._videoMetadataLoaded(ev)}" @canplay="${ev => this._startVideo(ev)}"></video>`
-              }
-              <figcaption>${this._currentResource().caption} 
-                ${this._isImageExtension(this._currentResource().extension) ?
-                  html`` : html`<span class="duration"></span>` }
+               <video controls src="${this._currentResource().url}#t=0.1" @loadedmetadata="${ev => this._videoMetadataLoaded(ev)}" @canplay="${ev => this._startVideo(ev)}"></video>
+              <figcaption>
+              <b>${this._currentResource().detection}</b>
+              ${this._currentResource().dateString}
+              ${this._currentResource().timeString} 
+
+                <span class="duration"></span>
               </figcaption>
             </figure>  
             <button class="btn btn-left" @click="${ev => this._selectResource(this.currentResourceIndex-1)}">&lt;</button> 
@@ -50,25 +44,16 @@ class GalleryCard extends LitElement {
             ${this.resources.map((resource, index) => {
                 return html`
                     <figure style="margin:5px;" id="resource${index}" data-imageIndex="${index}" @click="${ev => this._selectResource(index)}" class="${(index == this.currentResourceIndex) ? 'selected' : ''}">
-                    ${
-                      resource.isHass ?
-                      html`<hui-image
-                          .hass=${this._hass}
-                          .cameraImage=${resource.name}
-                          .cameraView=${"live"}
-                        ></hui-image>` :
-                      this._isImageExtension(resource.extension) ?
-                      html`<img class="lzy_img" src="/local/community/gallery-card/placeholder.jpg" data-src="${resource.url}"/>` :
-					            html`<video preload="none" data-src="${resource.url}#t=0.1" @loadedmetadata="${ev => this._videoMetadataLoaded(ev)}" @canplay="${ev => this._downloadNextMenuVideo()}"></video>`
-                    }
-                    <figcaption>${resource.caption} <span class="duration"></span></figcaption>
+                      <img class="lzy_img" src="/local/community/unifi-protect-gallery-card/placeholder.jpg" data-src="${resource.thumbnail_url}" />
+                      <figcaption>
+                        <b>${resource.detection}</b><br/>
+                        ${resource.dateString}<br/>
+                        ${resource.timeString}<br/>
+                        ${resource.duration}<br/>
+                      </figcaption>
                     </figure>
                 `;
             })}
-          </div>
-          <div id="imageModal" class="modal">
-            <img class="modal-content" id="popupImage">
-            <div id="popupCaption"></div>
           </div>
         </ha-card>
     `;
@@ -83,14 +68,12 @@ class GalleryCard extends LitElement {
     varr.forEach((v) => {
         this.imageObserver.observe(v);
     })
-    // changedProperties.forEach((oldValue, propName) => {
-    //   console.log(`${propName} changed. oldValue: ${oldValue}`);
-    // });
+
     this._downloadNextMenuVideo();
   }
 
   _downloadNextMenuVideo() {
-    //let v = this.shadowRoot.querySelector(".resource-menu figure video[preload='none']");
+
     let v = this.shadowRoot.querySelector(".resource-menu figure video[data-src]");
     
     if (v)
@@ -106,7 +89,6 @@ class GalleryCard extends LitElement {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
                 const lazyImage = entry.target
-                //console.log("lazy loading ", lazyImage)
                 lazyImage.src = lazyImage.dataset.src
             }
         })
@@ -138,7 +120,7 @@ class GalleryCard extends LitElement {
   }
 
   static getConfigElement() {
-    return document.createElement("gallery-card-editor");
+    return document.createElement("unifi-protect-gallery-card-editor");
   }
 
   getCardSize() {
@@ -210,28 +192,7 @@ class GalleryCard extends LitElement {
     evt.target.parentNode.querySelector(".duration").innerHTML = "[" + this._getFormattedVideoDuration(evt.target.duration) + "]";    
   }
 
-  _popupCamera(evt) {
-    const event = new Event("hass-more-info", {
-      bubbles: true,
-      composed: true
-    });
-    event.detail = {entityId: this._currentResource().name};
-    this.dispatchEvent(event);
-  }
 
-  _popupImage(evt) {
-    var modal = this.shadowRoot.getElementById("imageModal");
-    var modalImg = this.shadowRoot.getElementById("popupImage");
-    var captionText = this.shadowRoot.getElementById("popupCaption");
-
-    modal.style.display = "block";
-    modalImg.src = this._currentResource().url;
-    captionText.innerHTML = this._currentResource().caption;
-
-    modal.onclick = function() {
-      modal.style.display = "none";
-    }
-  }
 
   _getFormattedVideoDuration(duration) {
   	var minutes = parseInt(duration / 60);
@@ -324,6 +285,7 @@ class GalleryCard extends LitElement {
       }
 
       if (entityId.substring(0, 15).toLowerCase() == "media-source://") {
+      
         commands.push(this._loadMediaResource(hass, entityId, maximumFiles, fileNameFormat, captionFormat, captionLeadingZeros, recursive, reverseSort));
       }
       else {
@@ -400,7 +362,8 @@ class GalleryCard extends LitElement {
         var resources = [];
 
         values.forEach(mediaItem => {
-            var resource = this._createFileResource(mediaItem.authenticated_path, fileNameFormat, captionFormat, captionLeadingZeros);
+            var resource = this._createFileResource(mediaItem, fileNameFormat, captionFormat, captionLeadingZeros);
+
 
             if (resource !== undefined) {
               resources.push(resource);
@@ -419,15 +382,12 @@ class GalleryCard extends LitElement {
       });
   }
 
-  _loadMedia(ref, hass, contentId, maximumFiles, recursive, reverseSort) {
+   _loadMedia(ref, hass, contentId, maximumFiles, recursive, reverseSort) {
     var mediaItem = {
       media_class: "directory",
       media_content_id: contentId
     };
 
-    if (contentId.substring(contentId.length - 1, contentId.length) != "/" && contentId != "media-source://media_source") {
-      mediaItem.media_content_id += "/";
-    }
 
     return Promise.all(this._fetchMedia(ref, hass, mediaItem, recursive))
       .then(function(values) { 
@@ -452,21 +412,23 @@ class GalleryCard extends LitElement {
           mediaItems.length = maximumFiles;
         }        
 
-        return Promise.all(mediaItems.map(function(mediaItem) {
-          return ref._fetchMediaItem(hass, mediaItem.media_content_id)
-            .then(function(auth) {
+        return Promise.all(mediaItems.map( async function(mediaItem) {
+
+          const vid_auth_url =  await ref._fetchMediaItem(hass, mediaItem.media_content_id)
+          const thumb_auth_url = await ref._fetchMediaItem(hass, mediaItem.media_content_id.replace("event", "eventthumb"))
+
               return {
                 ...mediaItem,
-                authenticated_path: auth.url 
+                authenticated_thumbnail_path: thumb_auth_url.url,
+                authenticated_path: vid_auth_url.url 
               };
-            });
+      
         }));
       });
   }
 
   _fetchMedia(ref, hass, mediaItem, recursive) {
     var commands = [];
-
     if (mediaItem.media_class == "directory") {
       if (mediaItem.children) {
         commands.push(
@@ -502,7 +464,7 @@ class GalleryCard extends LitElement {
     })
   }
 
-  _fetchMediaItem(hass, mediaItemPath) {
+  async _fetchMediaItem(hass, mediaItemPath) {
     return hass.callWS({
       type: "media_source/resolve_media",
       media_content_id: mediaItemPath,
@@ -553,8 +515,11 @@ class GalleryCard extends LitElement {
     return Promise.resolve(resources);
   }
 
-  _createFileResource(fileRawUrl, fileNameFormat, captionFormat, captionLeadingZeros) {
+  _createFileResource(mediaItem, fileNameFormat, captionFormat, captionLeadingZeros) {
     var resource;
+
+    var fileRawUrl = mediaItem.authenticated_path
+    var fileRawThumbnailUrl = mediaItem.authenticated_thumbnail_path
 
     var fileUrl = fileRawUrl.split("?")[0];
     var arfilePath = fileUrl.split("/");
@@ -566,63 +531,36 @@ class GalleryCard extends LitElement {
       fileName = fileName.substring(0, fileName.length - ext.length - 1);
       fileName = decodeURIComponent(fileName);
 
-      var fileCaption = "";
-      var date = "";
-      if (fileNameFormat === undefined || captionFormat === undefined)
-          fileCaption = fileName;
-      else {
-        var tokens = ["%YYY", "%m", "%d", "%H", "%M", "%S", "%p"]
-        fileCaption = captionFormat;
+      // console.log("_createFileResource", mediaItem)
 
-        var hr = 0;
-        var year = 0;
-        var month = 0;
-        var day = 0;
-        var hour = 0;
-        var min = 0;
-        var sec = 0;
-        for (let token of tokens) {
-          var searchIndex = fileNameFormat.indexOf(token);
+      const duration = mediaItem.title.split(" ")[2]
+      
+      const weekday = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec"];
+      const tempD =  new Date(`${mediaItem.title.split(" ")[0]} ${mediaItem.title.split(" ")[1]}`)
+      
+      const dateString =  `${weekday[tempD.getDay()]}, ${month[tempD.getMonth()]} ${tempD.getDate()}`
+      const thumbnail_path = mediaItem.media_content_id.replace("event", "eventthumb")
+      const date =`${mediaItem.title.split(" ")[0]}T${mediaItem.title.split(" ")[1]}`
+      const timeString = tempD.toLocaleTimeString()
+      const detection = mediaItem.title.split(" - ")[1];
 
-          if (searchIndex >= 0) {
-            var val = fileName.substring(searchIndex, searchIndex + token.length);
-            if (token == "%YYY" ) year = parseInt(val);
-            if (token == "%m" ) month = parseInt(val);
-            if (token == "%d" ) day = parseInt(val);
-            if (token == "%H" ) hour = parseInt(val);
-            if (token == "%M" ) min = parseInt(val);
-            if (token == "%S" ) sec = parseInt(val);
-            if (token == "%H" && captionFormat.indexOf("%p") >= 0) {
-              hr = parseInt(val);
-              if (val == "00") val = 12;
-              if (parseInt(val) > 12) val = parseInt(val) - 12;
-              if (captionLeadingZeros)
-                val = val.toString().padStart(2, '0');
-            }
-            if (!captionLeadingZeros && (token == "%m" || token == "%d" | token == "%H")) val = parseInt(val);
-            fileCaption = fileCaption.replace(token, val);
-          }
-        }
-
-        fileCaption = fileCaption.replace("%p", (hr > 11 ? "PM" : "AM"));
-        
-        if (year != 0 && month != 0 && day != 0) {
-          date = new Date(year, month, day, hour, min, sec);
-        }    
-        
-      }
 
       resource = {
         url: fileRawUrl,
+        thumbnail_url: fileRawThumbnailUrl,
         base_url: fileUrl,
         name: fileName,
         extension: ext,
-        caption: fileCaption,
+        thumbnail_path,
+        dateString,
+        timeString,
+        duration,
         index: -1,
-        date: date
+        date,
+        detection
       };
     }
-
     return resource;
   }
 
@@ -677,7 +615,9 @@ class GalleryCard extends LitElement {
         margin-right: -10px
       }
       figure.selected {
-        opacity: 0.5;
+        border: 1px rgba(255,255,255,.35) dashed;
+        background: rgba(0,0,0,.35);
+        border-radius: 10px;
       }
       .duration {
         font-style:italic;
@@ -861,9 +801,9 @@ class GalleryCard extends LitElement {
     `;
   }
 }
-customElements.define("gallery-card", GalleryCard);
+customElements.define("unifi-protect-gallery-card", UnifiProtectGalleryCard);
 
-class GalleryCardEditor extends LitElement {
+class UnifiProtectGalleryCardEditor extends LitElement {
   static get properties() {
     return {
       _fileNameExample: {},
@@ -1382,11 +1322,11 @@ class GalleryCardEditor extends LitElement {
   }
 }
 
-customElements.define("gallery-card-editor", GalleryCardEditor);
+customElements.define("unifi-protect-gallery-card-editor", UnifiProtectGalleryCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "gallery-card",
-  name: "Gallery Card",
+  type: "unifi-protect-gallery-card",
+  name: "Unifi Protect Gallery Card",
   preview: false, // Optional - defaults to false
   description: "The Gallery Card allows for viewing multiple images/videos.  Requires the Files sensor availble at https://github.com/TarheelGrad1998" // Optional
 });
