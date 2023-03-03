@@ -1,4 +1,8 @@
-# Gallery Card
+# Unifi Protect Gallery Card
+
+Forked & modified to work with unifi protect media_source
+
+README is NOT up to date
 
 Custom card for Home Assistant's UI LoveLace which will display images and videos in the style of a gallery.  Also supports displaying camera images.
 
