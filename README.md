@@ -4,13 +4,8 @@ Forked & modified to work with unifi protect media_source
 
 README is NOT up to date
 
-Custom card for Home Assistant's UI LoveLace which will display images and videos in the style of a gallery.  Also supports displaying camera images.
+Custom card for Home Assistant's UI LoveLace which will display UNifi Protect Thumbnails and videos in the style of a gallery. 
 
-This was developed for use alongside the [component for Kuna cameras](https://github.com/marthoc/kuna) but should work with any images/videos, in theory.
-
-New in v3.3 - support for folder sensor, sorting options, and misc fixes.  
-
-![Screenshot](https://github.com/TarheelGrad1998/GalleryCard/raw/master/screenshot.png)
 
 ## Images/Video sources
 To display files from a folder, there are now three options when using v3.3+:
