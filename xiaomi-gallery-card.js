@@ -4,6 +4,9 @@ import {
   css
 } from "https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js";
 
+import "https://unpkg.com/dayjs@1.11.7/dayjs.min.js?module";
+import "https://unpkg.com/dayjs@1.11.7/plugin/customParseFormat.js?module";
+import "https://unpkg.com/dayjs@1.11.7/plugin/relativeTime.js?module";
 
 class XiaomiGalleryCard extends LitElement {
   static get properties() {
