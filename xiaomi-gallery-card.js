@@ -537,8 +537,6 @@ class XiaomiGalleryCard extends LitElement {
         fileCaption = fileName;
       
       var fileDatePart = fileName;
-      if (fileNameDateBegins && !isNaN(parseInt(fileNameDateBegins)))
-        fileDatePart = fileDatePart.substring(parseInt(fileNameDateBegins) - 1);
       console.log(fileDatePart);
       if (fileNameFormat)
         date = dayjs(fileDatePart, fileNameFormat);
