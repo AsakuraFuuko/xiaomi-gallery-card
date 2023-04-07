@@ -524,6 +524,8 @@ class XiaomiGalleryCard extends LitElement {
     var fileUrl = fileRawUrl.split("?")[0];
     var arfilePath = fileUrl.split("/");
     var fileName = arfilePath[arfilePath.length - 1];
+    var date = "";
+    var fileCaption = "";
 
     if (fileName != '@eaDir') {
       var arFileName = fileName.split(".");
