@@ -1,10 +1,10 @@
-# Unifi Protect Gallery Card
+# Xiaomi Lock Gallery Card
 
-Forked & modified to work with unifi protect media_source
+Forked & modified to work with xiaomi lock media_source
 
 README is NOT up to date
 
-Custom card for Home Assistant's UI LoveLace which will display UNifi Protect Thumbnails and videos in the style of a gallery. 
+Custom card for Home Assistant's UI LoveLace which will display Xiaomi Lock Thumbnails and videos in the style of a gallery. 
 
 
 ## Images/Video sources
