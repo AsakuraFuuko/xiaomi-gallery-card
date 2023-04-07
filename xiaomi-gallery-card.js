@@ -5,7 +5,7 @@ import {
 } from "https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js";
 
 
-class UnifiProtectGalleryCard extends LitElement {
+class XiaomiGalleryCard extends LitElement {
   static get properties() {
     return {
       _hass: {},
@@ -44,7 +44,7 @@ class UnifiProtectGalleryCard extends LitElement {
             ${this.resources.map((resource, index) => {
                 return html`
                     <figure style="margin:5px;" id="resource${index}" data-imageIndex="${index}" @click="${ev => this._selectResource(index)}" class="${(index == this.currentResourceIndex) ? 'selected' : ''}">
-                      <img class="lzy_img" src="/local/community/unifi-protect-gallery-card/placeholder.jpg" data-src="${resource.thumbnail_url}" />
+                      <img class="lzy_img" src="/local/community/xiaomi-gallery-card/placeholder.jpg" data-src="${resource.thumbnail_url}" />
                       <figcaption>
                         <b>${resource.detection}</b><br/>
                         ${resource.dateString}<br/>
@@ -120,7 +120,7 @@ class UnifiProtectGalleryCard extends LitElement {
   }
 
   static getConfigElement() {
-    return document.createElement("unifi-protect-gallery-card-editor");
+    return document.createElement("xiaomi-gallery-card-editor");
   }
 
   getCardSize() {
@@ -531,20 +531,24 @@ class UnifiProtectGalleryCard extends LitElement {
       fileName = fileName.substring(0, fileName.length - ext.length - 1);
       fileName = decodeURIComponent(fileName);
 
-      // console.log("_createFileResource", mediaItem)
-
-      const duration = mediaItem.title.split(" ")[2]
+      if (captionFormat != " ")
+        fileCaption = fileName;
       
-      const weekday = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-      const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec"];
-      const tempD =  new Date(`${mediaItem.title.split(" ")[0]} ${mediaItem.title.split(" ")[1]}`)
-      
-      const dateString =  `${weekday[tempD.getDay()]}, ${month[tempD.getMonth()]} ${tempD.getDate()}`
-      const thumbnail_path = mediaItem.media_content_id.replace("event", "eventthumb")
-      const date =`${mediaItem.title.split(" ")[0]}T${mediaItem.title.split(" ")[1]}`
-      const timeString = tempD.toLocaleTimeString()
-      const detection = mediaItem.title.split(" - ")[1];
+      var fileDatePart = fileName;
+      if (fileNameDateBegins && !isNaN(parseInt(fileNameDateBegins)))
+        fileDatePart = fileDatePart.substring(parseInt(fileNameDateBegins) - 1);
+      console.log(fileDatePart);
+      if (fileNameFormat)
+        date = dayjs(fileDatePart, fileNameFormat);
 
+      if (date && captionFormat) {
+        if (captionFormat.toUpperCase().trim() == 'AGO')
+          fileCaption = date.fromNow();
+        else {
+          fileCaption = date.format(captionFormat);
+          fileCaption = fileCaption.replace(/ago/ig, date.fromNow());
+        }
+      }
 
       resource = {
         url: fileRawUrl,
@@ -801,9 +805,9 @@ class UnifiProtectGalleryCard extends LitElement {
     `;
   }
 }
-customElements.define("unifi-protect-gallery-card", UnifiProtectGalleryCard);
+customElements.define("xiaomi-gallery-card", XiaomiGalleryCard);
 
-class UnifiProtectGalleryCardEditor extends LitElement {
+class XiaomiGalleryCardEditor extends LitElement {
   static get properties() {
     return {
       _fileNameExample: {},
@@ -1322,11 +1326,11 @@ class UnifiProtectGalleryCardEditor extends LitElement {
   }
 }
 
-customElements.define("unifi-protect-gallery-card-editor", UnifiProtectGalleryCardEditor);
+customElements.define("xiaomi-gallery-card-editor", XiaomiGalleryCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "unifi-protect-gallery-card",
-  name: "Unifi Protect Gallery Card",
+  type: "xiaomi-gallery-card",
+  name: "Xiaomi Gallery Card",
   preview: false, // Optional - defaults to false
   description: "The Gallery Card allows for viewing multiple images/videos.  Requires the Files sensor availble at https://github.com/TarheelGrad1998" // Optional
 });
